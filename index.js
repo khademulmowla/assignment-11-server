@@ -53,6 +53,28 @@ async function run() {
             const result = await artCollection.findOne(query)
             res.send(result)
         })
+        // delete a single artifact data by id from db //
+        app.delete('/artifact/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await artCollection.deleteOne(query)
+            res.send(result)
+        })
+        // update by put //
+        app.put('/update-artifact/:id', async (req, res) => {
+            const id = req.params.id
+            const artData = req.body
+            const updated = {
+                $set: artData
+            }
+            const query = { _id: new ObjectId(id) }
+            const options = { upsert: true }
+            const result = await artCollection.updateOne(query, updated, options)
+            res.send(result)
+        })
+
+        /////////////////////////////////////////////
+        //////////////////////////////////////////////
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
