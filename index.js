@@ -27,6 +27,7 @@ async function run() {
 
         const db = client.db('art-db')
         const artCollection = db.collection('arts')
+        const likedCollection = db.collection('likes')
         // save a art in db //
         app.post('/add-artifact', async (req, res) => {
             const artData = req.body;
@@ -75,6 +76,36 @@ async function run() {
 
         /////////////////////////////////////////////
         //////////////////////////////////////////////
+        // save a liked artifact it db 
+        app.post('/add-like', async (req, res) => {
+            const likeData = req.body
+            // check if a user already liked a artifact 
+            const query = { email: likeData.email, artLikeId: likeData.artLikeId }
+            const alreadyLiked = await likedCollection.findOne(query)
+            // console.log('already exist', alreadyLiked)
+            if (alreadyLiked) {
+                return res.status(400).send('You have already liked this artifact!')
+            }
+            // save data in like collection 
+            const result = await likedCollection.insertOne(likeData)
+            // increase bid count in art collection 
+            const filter = { _id: new ObjectId(likeData.artLikeId) }
+            const update = {
+                $inc: { like_count: 1 }
+            }
+            const updateLikeCount = await artCollection.updateOne(filter, update)
+            res.send(result)
+        })
+
+        // get all liked artifact for  specific user //
+        app.get('/liked/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email }
+            const result = await likedCollection.find(query).toArray()
+            res.send(result)
+
+
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
